@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+        <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>  
+        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+    </head>
+    <body>
+        <table id="roi-table" class="display">
+            <thead>
+                <tr>
+                    <th>Variable</th>
+                    <th>Value</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class='section-header'>Containment ROI</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Cost per contained call</td>
+                    <td><input type="text" id="cost-per-iva-call" name="cost-per-iva-call" value="0.5" class='dollars'></td>
+                    <td>Cost of a call handled by IVA without going to agent</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <script>
+            var table = $('#roi-table').DataTable();
+            
+            table.on( 'draw', function () {
+                //alert( 'Table redrawn' );
+            } );
+            //table.cell(0,0).inline()
+
+            $('.dollars').each((index, element) => {
+                const e = $(element)
+                e.val(formatDollars(e.val()))
+            })
+            $('.dollars').change((e) => {
+                const value = $(e.target).val()
+                $(e.target).val(formatDollars(value))
+            })
+
+            function formatDollars(s) {
+                return numeral(s).format('$0,0.00')
+            }
+        </script>
+    </body>
+</html>
