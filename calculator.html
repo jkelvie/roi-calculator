@@ -25,11 +25,26 @@
                     <td><input type="text" id="cost-per-iva-call" name="cost-per-iva-call" value="0.5" class='dollars'></td>
                     <td>Cost of a call handled by IVA without going to agent</td>
                 </tr>
+                <tr>
+                    <td>Cost per agent call</td>
+                    <td><input type="text" id="cost-per-agent-call" name="cost-per-agent-call" value="5" class='dollars'></td>
+                    <td>Average cost of a call handled by customer service agent</td>
+                </tr>
+                <tr>
+                    <td>Calls per day</td>
+                    <td><input type="text" id="calls-per-day" name="calls-per-day" value="10000" class='integer'></td>
+                    <td>Average number of calls per day</td>
+                </tr>
             </tbody>
         </table>
         
         <script>
-            var table = $('#roi-table').DataTable();
+            var table = $('#roi-table').DataTable({
+                "info":     false,
+                "ordering": false,
+                "paging":   false,
+                "searching": false
+            });
             
             table.on( 'draw', function () {
                 //alert( 'Table redrawn' );
@@ -40,13 +55,24 @@
                 const e = $(element)
                 e.val(formatDollars(e.val()))
             })
+
             $('.dollars').change((e) => {
                 const value = $(e.target).val()
                 $(e.target).val(formatDollars(value))
             })
 
+
+            $('.integer').each((index, element) => formatInteger(element))
+            $('.integer').change((e) => formatInteger(e.target))
+
             function formatDollars(s) {
                 return numeral(s).format('$0,0.00')
+            }
+
+            function formatInteger(e) {
+                const element = $(e)
+                const value = element.val()
+                element.val(numeral(value).format('0,0'))
             }
         </script>
     </body>
