@@ -1,0 +1,4 @@
+- Make prettier
+  - Fonts
+  - Row styling for headers, inputs, formulas
+- Make sure dependencies between cells are handled correctly
