@@ -1,79 +1,248 @@
 <html>
-    <head>
-        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
-        <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>  
-        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
-    </head>
-    <body>
-        <table id="roi-table" class="display">
-            <thead>
-                <tr>
-                    <th>Variable</th>
-                    <th>Value</th>
-                    <th>Notes</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class='section-header'>Containment ROI</td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Cost per contained call</td>
-                    <td><input type="text" id="cost-per-iva-call" name="cost-per-iva-call" value="0.5" class='dollars'></td>
-                    <td>Cost of a call handled by IVA without going to agent</td>
-                </tr>
-                <tr>
-                    <td>Cost per agent call</td>
-                    <td><input type="text" id="cost-per-agent-call" name="cost-per-agent-call" value="5" class='dollars'></td>
-                    <td>Average cost of a call handled by customer service agent</td>
-                </tr>
-                <tr>
-                    <td>Calls per day</td>
-                    <td><input type="text" id="calls-per-day" name="calls-per-day" value="10000" class='integer'></td>
-                    <td>Average number of calls per day</td>
-                </tr>
-            </tbody>
-        </table>
-        
-        <script>
-            var table = $('#roi-table').DataTable({
-                "info":     false,
-                "ordering": false,
-                "paging":   false,
-                "searching": false
-            });
-            
-            table.on( 'draw', function () {
-                //alert( 'Table redrawn' );
-            } );
-            //table.cell(0,0).inline()
+  <head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.4.3/math.js"
+      integrity="sha512-sRvCDYrwGsQ4eYKgvBPVGLMX6vUqOpXwfcLzN5CJFTauEvQZsMv+2nrtWzL4UDa38vXuW80lzit9A8t2l950Ow=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      type="text/javascript"
+      charset="utf8"
+      src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"
+    ></script>
+  </head>
+  <body>
+    <table id="roi-table" class="display">
+      <thead>
+        <tr>
+          <th>Variable</th>
+          <th>Value</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="section-header">Containment ROI</td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr class="input">
+          <td>Cost per contained call</td>
+          <td>
+            <input type="text" id="cost-per-iva-call" name="cost-per-iva-call" value="0.5" class="dollars" />
+          </td>
+          <td>Cost of a call handled by IVA without going to agent</td>
+        </tr>
+        <tr class="input">
+          <td>Cost per agent call</td>
+          <td>
+            <input type="text" id="cost-per-agent-call" name="cost-per-agent-call" value="5" class="dollars" />
+          </td>
+          <td>Average cost of a call handled by customer service agent</td>
+        </tr>
+        <tr class="input">
+          <td>Calls per day</td>
+          <td>
+            <input type="text" id="calls-per-day" name="calls-per-day" value="10000" class="integer" />
+          </td>
+          <td>Average number of calls per day</td>
+        </tr>
+        <tr class="input">
+          <td>Current containment rate</td>
+          <td>
+            <input type="text" id="containment-rate" name="containment-rate" value="0.5" class="percentage" />
+          </td>
+          <td>Average number of calls per day</td>
+        </tr>
+        <tr class="formula">
+          <td>Monthly agent cost</td>
+          <td>
+            <input type="text" id="monthly-agent-cost" name="monthly-agent-cost" value="0.5" />
+          </td>
+          <td>Monthly agent cost</td>
+        </tr>
+        <tr class="formula">
+          <td>Monthly IVA cost</td>
+          <td>
+            <input type="text" id="monthly-iva-cost" name="monthly-iva-cost" value="0.5" />
+          </td>
+          <td>Monthly IVA cost</td>
+        </tr>
+        <tr>
+          <td class="section-header">Accuracy ROI</td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="section-subheader">Pre-Training</td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr class="input">
+          <td>Current accuracy rate</td>
+          <td>
+            <input type="text" id="current-accuracy-rate" value="0.8" class="percentage" />
+          </td>
+          <td>The current accuracy rate</td>
+        </tr>
+        <tr class="input">
+          <td>Number of interactions per call</td>
+          <td>
+            <input type="text" id="interactions-per-call" value="5" class="integer" />
+          </td>
+          <td>The average number of interactions per call</td>
+        </tr>
+        <tr class="input">
+          <td>Number of errors before drop out</td>
+          <td>
+            <input type="text" id="errors-before-dropout" value="2" class="integer" />
+          </td>
+          <td>The number of errors a customer will tolerate before giving up on the IVA</td>
+        </tr>
+        <tr class="formula">
+          <td>Dropouts due to errors</td>
+          <td>
+            <input type="text" id="dropouts-from-errors" />
+          </td>
+          <td>The number of customers that give up on the IVA due to errors</td>
+        </tr>
+        <tr class="formula">
+          <td>Containment failure rate from errors</td>
+          <td>
+            <input type="text" id="containment-failures-from-errors" />
+          </td>
+          <td>The number of calls that are not contained due to errors</td>
+        </tr>
+        <tr>
+          <td class="section-subheader">Post-Training</td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr class="input">
+          <td>New accuracy rate</td>
+          <td>
+            <input type="text" id="new-accuracy-rate" value="0.95" class="percentage" />
+          </td>
+          <td>The new accuracy rate after training</td>
+        </tr>
+        <tr class="formula">
+          <td>Dropouts due to errors</td>
+          <td>
+            <input type="text" id="dropouts-from-errors-new" />
+          </td>
+          <td>The number of customers that give up on the IVA due to errors</td>
+        </tr>
+      </tbody>
+    </table>
 
-            $('.dollars').each((index, element) => {
-                const e = $(element)
-                e.val(formatDollars(e.val()))
-            })
+    <script>
+      var table = $('#roi-table').DataTable({
+        info: false,
+        ordering: false,
+        paging: false,
+        searching: false
+      })
 
-            $('.dollars').change((e) => {
-                const value = $(e.target).val()
-                $(e.target).val(formatDollars(value))
-            })
+      table.on('draw', function () {
+        //alert( 'Table redrawn' );
+      })
+      //table.cell(0,0).inline()
 
+      $('.formula input').prop('disabled', true)
+      $('.dollars').each((index, element) => formatDollars(element))
+      $('.dollars').change((e) => formatDollars(e.target))
 
-            $('.integer').each((index, element) => formatInteger(element))
-            $('.integer').change((e) => formatInteger(e.target))
+      $('.integer').each((index, element) => formatInteger(element))
+      $('.integer').change((e) => formatInteger(e.target))
 
-            function formatDollars(s) {
-                return numeral(s).format('$0,0.00')
-            }
+      $('.percentage').each((index, element) => formatPercentage(element))
+      $('.percentage').change((e) => formatPercentage(e.target))
 
-            function formatInteger(e) {
-                const element = $(e)
-                const value = element.val()
-                element.val(numeral(value).format('0,0'))
-            }
-        </script>
-    </body>
+      calculate('#monthly-agent-cost', (element, value) => {
+        const callsPerDay = toNumber('#calls-per-day')
+        const containmentRate = toNumber('#containment-rate')
+        const costPerCall = toNumber('#cost-per-agent-call')
+        const result = callsPerDay * 30 * (1 - containmentRate) * costPerCall
+        element.val(numeral(result).format('$0,0.00'))
+      })
+
+      calculate('#monthly-iva-cost', (element, value) => {
+        const callsPerDay = toNumber('#calls-per-day')
+        const containmentRate = toNumber('#containment-rate')
+        const costPerCall = toNumber('#cost-per-iva-call')
+        const result = callsPerDay * 30 * containmentRate * costPerCall
+        element.val(numeral(result).format('$0,0.00'))
+      })
+
+      calculate('#dropouts-from-errors', (element, value) => {
+        const currentAccuracyRate = toNumber('#current-accuracy-rate')
+        const result = dropoutRate(currentAccuracyRate)
+        element.val(numeral(result).format('0.00%'))
+      })
+
+      calculate('#containment-failures-from-errors', (element, value) => {
+        const dropoutsFromErrors = toNumber('#dropouts-from-errors')
+        const containmentRate = toNumber('#containment-rate')
+
+        const result = dropoutsFromErrors / (1 - containmentRate)
+        element.val(numeral(result).format('0.00%'))
+      })
+
+      calculate('#dropouts-from-errors-new', (element, value) => {
+        const accuracyRate = toNumber('#new-accuracy-rate')
+        const result = dropoutRate(accuracyRate)
+        element.val(numeral(result).format('0.00%'))
+      })
+
+      function dropoutRate(accuracyRate) {
+        const errorsBeforeDropout = toNumber('#errors-before-dropout')
+        const interactionsPerCall = toNumber('#interactions-per-call')
+        const combinations =
+          math.factorial(errorsBeforeDropout) *
+          (math.factorial(interactionsPerCall) - math.factorial(errorsBeforeDropout))
+
+        const result =
+          (combinations *
+            Math.pow(1 - accuracyRate, errorsBeforeDropout) *
+            Math.pow(accuracyRate, interactionsPerCall - errorsBeforeDropout)) /
+          100
+        return result
+      }
+
+      function formatDollars(e) {
+        return format(e, '$0,0.00')
+      }
+
+      function formatInteger(e) {
+        return format(e, '0,0')
+      }
+
+      function formatPercentage(e) {
+        return format(e, '0%')
+      }
+
+      function format(e, formatString) {
+        const element = $(e)
+        const value = element.val()
+        element.val(numeral(value).format(formatString))
+      }
+
+      function calculate(selector, routine) {
+        routine($(selector), $(selector).val())
+        $('tr.input input').change((e) => routine($(selector), $(selector).val))
+      }
+
+      function toNumber(selector) {
+        return numeral($(selector).val()).value()
+      }
+    </script>
+  </body>
 </html>

@@ -3,6 +3,10 @@
     "express": "^4.17.1"
   },
   "description": "",
+  "devDependencies": {
+    "prettier": "2.3.2",
+    "standard": "^16.0.3"
+  },
   "license": "ISC",
   "name": "asr-roi",
   "scripts": {
