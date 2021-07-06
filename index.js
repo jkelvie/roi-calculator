@@ -13,7 +13,7 @@ app.get('/', (request, response) => {
       'x-sent': true
     }
   }
-  console.info('Dir: ' + __dirname)
+
   response.sendFile('./calculator.html', options)
 })
 

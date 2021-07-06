@@ -301,6 +301,7 @@
         const combinations =
           math.factorial(interactionsPerCall) /
           (math.factorial(errorsBeforeDropout) * math.factorial(interactionsPerCall - errorsBeforeDropout))
+        console.info('# of combinations: ' + combinations)
 
         let result =
           combinations *
