@@ -80,7 +80,7 @@
           <td>
             <input type="text" id="containment-rate" name="containment-rate" value="0.5" class="percentage" />
           </td>
-          <td>Average number of calls per day</td>
+          <td>The percentage of calls handled by the IVA alone</td>
         </tr>
         <tr class="formula">
           <td>Monthly agent cost</td>
@@ -154,14 +154,14 @@
           <td>The new accuracy rate after training</td>
         </tr>
         <tr class="formula">
-          <td>Dropouts due to errors</td>
+          <td>New dropout rate due to errors</td>
           <td>
             <input type="text" id="dropouts-from-errors-new" />
           </td>
           <td>The number of customers that give up on the IVA due to errors</td>
         </tr>
         <tr class="formula">
-          <td>Containment rate</td>
+          <td>New containment rate</td>
           <td>
             <input type="text" id="containment-rate-new" />
           </td>
@@ -210,6 +210,7 @@
       //   paging: false,
       //   searching: false
       // })
+      const calculations = []
 
       $('.formula input').prop('disabled', true)
       $('.dollars').each((index, element) => formatDollars(element))
@@ -298,14 +299,16 @@
         const errorsBeforeDropout = toNumber('#errors-before-dropout')
         const interactionsPerCall = toNumber('#interactions-per-call')
         const combinations =
-          math.factorial(errorsBeforeDropout) *
-          (math.factorial(interactionsPerCall) - math.factorial(errorsBeforeDropout))
+          math.factorial(interactionsPerCall) /
+          (math.factorial(errorsBeforeDropout) * math.factorial(interactionsPerCall - errorsBeforeDropout))
 
-        const result =
-          (combinations *
-            Math.pow(1 - accuracyRate, errorsBeforeDropout) *
-            Math.pow(accuracyRate, interactionsPerCall - errorsBeforeDropout)) /
-          100
+        let result =
+          combinations *
+          Math.pow(1 - accuracyRate, errorsBeforeDropout) *
+          Math.pow(accuracyRate, interactionsPerCall - errorsBeforeDropout)
+        if (result > 1) {
+          result = 1
+        }
         return result
       }
 
@@ -343,7 +346,16 @@
 
       function calculate(selector, routine) {
         routine($(selector), $(selector).val())
-        $('tr.input input').change((e) => routine($(selector), $(selector).val))
+        calculations.push({
+          selector: selector,
+          routine: routine
+        })
+
+        $('tr.input input').change((e) => {
+          for (const calculation of calculations) {
+            calculation.routine($(calculation.selector), $(calculation.selector).val())
+          }
+        })
       }
 
       function toNumber(selector) {
