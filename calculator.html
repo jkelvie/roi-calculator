@@ -111,7 +111,7 @@
           <td>
             <input type="text" id="current-accuracy-rate" value="0.8" class="percentage" />
           </td>
-          <td>The current accuracy rate</td>
+          <td>The current accuracy of the speech recognition (ASR) and natural language understanding (NLU) system</td>
         </tr>
         <tr class="input">
           <td>Number of interactions per call</td>
@@ -121,25 +121,25 @@
           <td>The average number of interactions per call</td>
         </tr>
         <tr class="input">
-          <td>Number of errors before drop out</td>
+          <td>Number of errors before requesting agent</td>
           <td>
             <input type="text" id="errors-before-dropout" value="2" class="integer" />
           </td>
-          <td>The number of errors a customer will tolerate before giving up on the IVA</td>
+          <td>The number of inaccuracy errors a customer will tolerate before giving up on the IVA</td>
         </tr>
         <tr class="formula">
-          <td>Dropouts due to errors</td>
+          <td>Rate of agent transfers due to inaccuracy</td>
           <td>
             <input type="text" id="dropouts-from-errors" />
           </td>
-          <td>The number of customers that give up on the IVA due to errors</td>
+          <td>The percentage of customers that give up on the IVA due to inaccuracy</td>
         </tr>
-        <tr class="formula">
-          <td>Containment failure rate from errors</td>
+        <tr class="formula" style="display: none">
+          <td>Containment failure rate from inaccuracy</td>
           <td>
             <input type="text" id="containment-failures-from-errors" />
           </td>
-          <td>The number of calls that are not contained due to errors</td>
+          <td>The percentage of calls that are not contained due to lack of accuracy</td>
         </tr>
         <tr>
           <td class="section-subheader">Post-Training</td>
@@ -154,11 +154,11 @@
           <td>The new accuracy rate after training</td>
         </tr>
         <tr class="formula">
-          <td>New dropout rate due to errors</td>
+          <td>New rate of agent transfers due to inaccuracy</td>
           <td>
             <input type="text" id="dropouts-from-errors-new" />
           </td>
-          <td>The number of customers that give up on the IVA due to errors</td>
+          <td>The number of customers that give up on the IVA due to inaccuracy</td>
         </tr>
         <tr class="formula">
           <td>New containment rate</td>
@@ -258,8 +258,10 @@
         const dropoutsFromErrors = toNumber('#dropouts-from-errors')
         const dropoutsFromErrorsNew = toNumber('#dropouts-from-errors-new')
         const containmentRate = toNumber('#containment-rate')
+        //const dropoutRate = 1 - containmentRate
 
-        const result = (dropoutsFromErrors - dropoutsFromErrorsNew) / (1 - containmentRate) + containmentRate
+        // The new containment rate is the old one plus the
+        const result = dropoutsFromErrors - dropoutsFromErrorsNew + containmentRate
         element.val(numeral(result).format('0.00%'))
       })
 
@@ -296,6 +298,7 @@
       })
 
       function dropoutRate(accuracyRate) {
+        const containmentRate = toNumber('#containment-rate')
         const errorsBeforeDropout = toNumber('#errors-before-dropout')
         const interactionsPerCall = toNumber('#interactions-per-call')
         const combinations =
@@ -309,6 +312,11 @@
           Math.pow(accuracyRate, interactionsPerCall - errorsBeforeDropout)
         if (result > 1) {
           result = 1
+        }
+
+        // If the dropout rate is greater than the overall error rate, set it to the error rate
+        if (result > 1 - containmentRate) {
+          result = 1 - containmentRate
         }
         return result
       }
@@ -336,7 +344,12 @@
       }
 
       function formatPercentage(e) {
-        return format(e, '0%')
+        const element = $(e)
+        let value = numeral(element.val()).value()
+        if (value > 1) {
+          value = value / 100
+        }
+        element.val(numeral(value).format('0%'))
       }
 
       function format(e, formatString) {
