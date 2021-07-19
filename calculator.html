@@ -15,11 +15,7 @@
       integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
       crossorigin="anonymous"
     ></script>
-    <script
-      type="text/javascript"
-      charset="utf8"
-      src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"
-    ></script>
+    <script type="module" src="calculator.js"></script>
     <style>
       th {
         font-family: 'Open Sans';
@@ -204,173 +200,138 @@
     </table>
 
     <script>
-      // var table = $('#roi-table').DataTable({
-      //   info: false,
-      //   ordering: false,
-      //   paging: false,
-      //   searching: false
-      // })
-      const calculations = []
+      $(() => {
+        // var table = $('#roi-table').DataTable({
+        //   info: false,
+        //   ordering: false,
+        //   paging: false,
+        //   searching: false
+        // })
+        const calculator = new window.Calculator()
+        const calculations = []
 
-      $('.formula input').prop('disabled', true)
-      $('.dollars').each((index, element) => formatDollars(element))
-      $('.dollars').change((e) => formatDollars(e.target))
+        $('.formula input').prop('disabled', true)
+        $('.dollars').each((index, element) => formatDollars(element))
+        $('.dollars').change((e) => formatDollars(e.target))
 
-      $('.integer').each((index, element) => formatInteger(element))
-      $('.integer').change((e) => formatInteger(e.target))
+        $('.integer').each((index, element) => formatInteger(element))
+        $('.integer').change((e) => formatInteger(e.target))
 
-      $('.percentage').each((index, element) => formatPercentage(element))
-      $('.percentage').change((e) => formatPercentage(e.target))
+        $('.percentage').each((index, element) => formatPercentage(element))
+        $('.percentage').change((e) => formatPercentage(e.target))
 
-      calculate('#monthly-agent-cost', (element, value) => {
-        const containmentRate = toNumber('#containment-rate')
-        const result = monthlyAgentCost(containmentRate)
-        element.val(numeral(result).format('$0,0.00'))
-      })
-
-      calculate('#monthly-iva-cost', (element, value) => {
-        const containmentRate = toNumber('#containment-rate')
-        const result = monthlyIVACost(containmentRate)
-        element.val(numeral(result).format('$0,0.00'))
-      })
-
-      calculate('#dropouts-from-errors', (element, value) => {
-        const currentAccuracyRate = toNumber('#current-accuracy-rate')
-        const result = dropoutRate(currentAccuracyRate)
-        element.val(numeral(result).format('0.00%'))
-      })
-
-      calculate('#containment-failures-from-errors', (element, value) => {
-        const dropoutsFromErrors = toNumber('#dropouts-from-errors')
-        const containmentRate = toNumber('#containment-rate')
-
-        const result = dropoutsFromErrors / (1 - containmentRate)
-        element.val(numeral(result).format('0.00%'))
-      })
-
-      calculate('#dropouts-from-errors-new', (element, value) => {
-        const accuracyRate = toNumber('#new-accuracy-rate')
-        const result = dropoutRate(accuracyRate)
-        element.val(numeral(result).format('0.00%'))
-      })
-
-      calculate('#containment-rate-new', (element, value) => {
-        const dropoutsFromErrors = toNumber('#dropouts-from-errors')
-        const dropoutsFromErrorsNew = toNumber('#dropouts-from-errors-new')
-        const containmentRate = toNumber('#containment-rate')
-        //const dropoutRate = 1 - containmentRate
-
-        // The new containment rate is the old one plus the
-        const result = dropoutsFromErrors - dropoutsFromErrorsNew + containmentRate
-        element.val(numeral(result).format('0.00%'))
-      })
-
-      calculate('#monthly-agent-cost-new', (element, value) => {
-        const containmentRate = toNumber('#containment-rate-new')
-        const result = monthlyAgentCost(containmentRate)
-        element.val(numeral(result).format('$0,0.00'))
-      })
-
-      calculate('#monthly-iva-cost-new', (element, value) => {
-        const containmentRate = toNumber('#containment-rate-new')
-        const result = monthlyIVACost(containmentRate)
-        element.val(numeral(result).format('$0,0.00'))
-      })
-
-      calculate('#dollars-saved-monthly', (element, value) => {
-        const monthlyAgentCost = toNumber('#monthly-agent-cost')
-        const monthlyIVACost = toNumber('#monthly-iva-cost')
-        const monthlyAgentCostNew = toNumber('#monthly-agent-cost-new')
-        const monthlyIVACostNew = toNumber('#monthly-iva-cost-new')
-        const result = monthlyAgentCost + monthlyIVACost - (monthlyAgentCostNew + monthlyIVACostNew)
-        element.val(numeral(result).format('$0,0.00'))
-      })
-
-      calculate('#percentage-saved', (element, value) => {
-        const monthlyAgentCost = toNumber('#monthly-agent-cost')
-        const monthlyIVACost = toNumber('#monthly-iva-cost')
-        const monthlyAgentCostNew = toNumber('#monthly-agent-cost-new')
-        const monthlyIVACostNew = toNumber('#monthly-iva-cost-new')
-        const result =
-          (monthlyAgentCost + monthlyIVACost - (monthlyAgentCostNew + monthlyIVACostNew)) /
-          (monthlyAgentCost + monthlyIVACost)
-        element.val(numeral(result).format('0.00%'))
-      })
-
-      function dropoutRate(accuracyRate) {
-        const containmentRate = toNumber('#containment-rate')
-        const errorsBeforeDropout = toNumber('#errors-before-dropout')
-        const interactionsPerCall = toNumber('#interactions-per-call')
-        const combinations =
-          math.factorial(interactionsPerCall) /
-          (math.factorial(errorsBeforeDropout) * math.factorial(interactionsPerCall - errorsBeforeDropout))
-        console.info('# of combinations: ' + combinations)
-
-        let result =
-          combinations *
-          Math.pow(1 - accuracyRate, errorsBeforeDropout) *
-          Math.pow(accuracyRate, interactionsPerCall - errorsBeforeDropout)
-        if (result > 1) {
-          result = 1
-        }
-
-        // If the dropout rate is greater than the overall error rate, set it to the error rate
-        if (result > 1 - containmentRate) {
-          result = 1 - containmentRate
-        }
-        return result
-      }
-
-      function monthlyAgentCost(containmentRate) {
-        const callsPerDay = toNumber('#calls-per-day')
-        const costPerCall = toNumber('#cost-per-agent-call')
-        const result = callsPerDay * 30 * (1 - containmentRate) * costPerCall
-        return result
-      }
-
-      function monthlyIVACost(containmentRate) {
-        const callsPerDay = toNumber('#calls-per-day')
-        const costPerCall = toNumber('#cost-per-iva-call')
-        const result = callsPerDay * 30 * containmentRate * costPerCall
-        return result
-      }
-
-      function formatDollars(e) {
-        return format(e, '$0,0.00')
-      }
-
-      function formatInteger(e) {
-        return format(e, '0,0')
-      }
-
-      function formatPercentage(e) {
-        const element = $(e)
-        let value = numeral(element.val()).value()
-        if (value > 1) {
-          value = value / 100
-        }
-        element.val(numeral(value).format('0%'))
-      }
-
-      function format(e, formatString) {
-        const element = $(e)
-        const value = element.val()
-        element.val(numeral(value).format(formatString))
-      }
-
-      function calculate(selector, routine) {
-        routine($(selector), $(selector).val())
-        calculations.push({
-          selector: selector,
-          routine: routine
+        calculate('#monthly-agent-cost', (element, value) => {
+          const containmentRate = toNumber('#containment-rate')
+          const result = calculator.monthlyAgentCost(containmentRate)
+          element.val(numeral(result).format('$0,0.00'))
         })
 
-        $('tr.input input').change((e) => {
-          for (const calculation of calculations) {
-            calculation.routine($(calculation.selector), $(calculation.selector).val())
+        calculate('#monthly-iva-cost', (element, value) => {
+          const containmentRate = toNumber('#containment-rate')
+          const result = calculator.monthlyIVACost(containmentRate)
+          element.val(numeral(result).format('$0,0.00'))
+        })
+
+        calculate('#dropouts-from-errors', (element, value) => {
+          const currentAccuracyRate = toNumber('#current-accuracy-rate')
+          const result = calculator.dropoutRate(currentAccuracyRate)
+          element.val(numeral(result).format('0.00%'))
+        })
+
+        calculate('#containment-failures-from-errors', (element, value) => {
+          const dropoutsFromErrors = toNumber('#dropouts-from-errors')
+          const containmentRate = toNumber('#containment-rate')
+
+          const result = dropoutsFromErrors / (1 - containmentRate)
+          element.val(numeral(result).format('0.00%'))
+        })
+
+        calculate('#dropouts-from-errors-new', (element, value) => {
+          const accuracyRate = toNumber('#new-accuracy-rate')
+          const result = calculator.dropoutRate(accuracyRate)
+          element.val(numeral(result).format('0.00%'))
+        })
+
+        calculate('#containment-rate-new', (element, value) => {
+          const dropoutsFromErrors = toNumber('#dropouts-from-errors')
+          const dropoutsFromErrorsNew = toNumber('#dropouts-from-errors-new')
+          const containmentRate = toNumber('#containment-rate')
+          //const dropoutRate = 1 - containmentRate
+
+          // The new containment rate is the old one plus the
+          const result = dropoutsFromErrors - dropoutsFromErrorsNew + containmentRate
+          element.val(numeral(result).format('0.00%'))
+        })
+
+        calculate('#monthly-agent-cost-new', (element, value) => {
+          const containmentRate = toNumber('#containment-rate-new')
+          const result = calculator.monthlyAgentCost(containmentRate)
+          element.val(numeral(result).format('$0,0.00'))
+        })
+
+        calculate('#monthly-iva-cost-new', (element, value) => {
+          const containmentRate = toNumber('#containment-rate-new')
+          const result = calculator.monthlyIVACost(containmentRate)
+          element.val(numeral(result).format('$0,0.00'))
+        })
+
+        calculate('#dollars-saved-monthly', (element, value) => {
+          const monthlyAgentCost = toNumber('#monthly-agent-cost')
+          const monthlyIVACost = toNumber('#monthly-iva-cost')
+          const monthlyAgentCostNew = toNumber('#monthly-agent-cost-new')
+          const monthlyIVACostNew = toNumber('#monthly-iva-cost-new')
+          const result = monthlyAgentCost + monthlyIVACost - (monthlyAgentCostNew + monthlyIVACostNew)
+          element.val(numeral(result).format('$0,0.00'))
+        })
+
+        calculate('#percentage-saved', (element, value) => {
+          const monthlyAgentCost = toNumber('#monthly-agent-cost')
+          const monthlyIVACost = toNumber('#monthly-iva-cost')
+          const monthlyAgentCostNew = toNumber('#monthly-agent-cost-new')
+          const monthlyIVACostNew = toNumber('#monthly-iva-cost-new')
+          const result =
+            (monthlyAgentCost + monthlyIVACost - (monthlyAgentCostNew + monthlyIVACostNew)) /
+            (monthlyAgentCost + monthlyIVACost)
+          element.val(numeral(result).format('0.00%'))
+        })
+
+        function formatDollars(e) {
+          return format(e, '$0,0.00')
+        }
+
+        function formatInteger(e) {
+          return format(e, '0,0')
+        }
+
+        function formatPercentage(e) {
+          const element = $(e)
+          let value = numeral(element.val()).value()
+          if (value > 1) {
+            value = value / 100
           }
-        })
-      }
+          element.val(numeral(value).format('0%'))
+        }
+
+        function format(e, formatString) {
+          const element = $(e)
+          const value = element.val()
+          element.val(numeral(value).format(formatString))
+        }
+
+        function calculate(selector, routine) {
+          routine($(selector), $(selector).val())
+          calculations.push({
+            selector: selector,
+            routine: routine
+          })
+
+          $('tr.input input').change((e) => {
+            for (const calculation of calculations) {
+              calculation.routine($(calculation.selector), $(calculation.selector).val())
+            }
+          })
+        }
+      })
 
       function toNumber(selector) {
         return numeral($(selector).val()).value()
